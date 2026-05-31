@@ -1,0 +1,11 @@
+﻿venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.db
+*.pkl
+*.pt
+*.json.bak
+db/regime_cache.json
+.streamlit/

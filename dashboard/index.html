@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SignalAI — Trading Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --void:#03050a;
+  --deep:#060c14;
+  --glass:rgba(255,255,255,0.03);
+  --glass2:rgba(255,255,255,0.06);
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.12);
+  --text:#e8eaf0;
+  --muted:#5a6478;
+  --dim:#8892a4;
+  --green:#00f5a0;
+  --green2:#00c97a;
+  --green-g:rgba(0,245,160,0.12);
+  --red:#ff3b6b;
+  --red2:#cc1f4a;
+  --red-g:rgba(255,59,107,0.12);
+  --amber:#ffb830;
+  --amber-g:rgba(255,184,48,0.10);
+  --blue:#4f8cff;
+  --blue-g:rgba(79,140,255,0.10);
+  --purple:#9b6dff;
+  --cyan:#00d4ff;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--void);
+  color:var(--text);
+  font-family:'Syne',sans-serif;
+  overflow-x:hidden;
+  cursor:none;
+}
+
+/* ── CUSTOM CURSOR ──────────────────────────────────── */
+#cursor{
+  position:fixed;width:12px;height:12px;
+  background:var(--green);border-radius:50%;
+  pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%);
+  transition:transform 0.1s ease,width 0.2s,height 0.2s,background 0.2s;
+  mix-blend-mode:screen;
+}
+#cursor-ring{
+  position:fixed;width:36px;height:36px;
+  border:1px solid rgba(0,245,160,0.4);
+  border-radius:50%;pointer-events:none;z-index:9998;
+  transform:translate(-50%,-50%);
+  transition:transform 0.08s ease,width 0.3s,height 0.3s,border-color 0.3s;
+}
+
+/* ── ANTIGRAVITY CANVAS ─────────────────────────────── */
+#hero-canvas{
+  position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;
+}
+
+/* ── HERO SECTION ───────────────────────────────────── */
+.hero{
+  position:relative;min-height:100vh;
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  overflow:hidden;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(79,140,255,0.06) 0%, transparent 70%),
+             radial-gradient(ellipse 60% 40% at 80% 100%, rgba(0,245,160,0.04) 0%, transparent 60%),
+             var(--void);
+}
+
+.hero-content{
+  position:relative;z-index:2;
+  text-align:center;padding:0 24px;
+}
+
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(0,245,160,0.06);
+  border:1px solid rgba(0,245,160,0.15);
+  border-radius:100px;padding:6px 16px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;color:var(--green);
+  letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:32px;
+}
+.hero-badge .pulse{
+  width:6px;height:6px;background:var(--green);
+  border-radius:50%;animation:pulse 1.5s infinite;
+}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(0,245,160,0.6)}
+  50%{box-shadow:0 0 0 6px rgba(0,245,160,0)}
+}
+
+.hero-title{
+  font-size:clamp(52px,8vw,96px);
+  font-weight:800;line-height:0.95;
+  letter-spacing:-3px;margin-bottom:8px;
+  background:linear-gradient(135deg,#ffffff 0%,rgba(255,255,255,0.7) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-title span{
+  background:linear-gradient(135deg,var(--green) 0%,var(--cyan) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+
+.hero-sub{
+  font-size:15px;color:var(--dim);font-weight:400;
+  letter-spacing:0.5px;margin-bottom:48px;
+  font-family:'JetBrains Mono',monospace;
+}
+
+.hero-stats{
+  display:flex;gap:48px;justify-content:center;
+  margin-bottom:56px;
+}
+.hero-stat{text-align:center}
+.hero-stat-val{
+  font-size:32px;font-weight:700;
+  font-family:'JetBrains Mono',monospace;
+  background:linear-gradient(135deg,var(--green),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-stat-lbl{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+
+.hero-cta{
+  display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,rgba(0,245,160,0.12),rgba(0,212,255,0.06));
+  border:1px solid rgba(0,245,160,0.25);
+  border-radius:12px;padding:14px 32px;
+  font-size:14px;font-weight:600;color:var(--green);
+  cursor:pointer;text-decoration:none;letter-spacing:0.5px;
+  transition:all 0.3s ease;
+}
+.hero-cta:hover{
+  background:linear-gradient(135deg,rgba(0,245,160,0.2),rgba(0,212,255,0.10));
+  border-color:rgba(0,245,160,0.4);
+  transform:translateY(-2px);
+  box-shadow:0 20px 60px rgba(0,245,160,0.12);
+}
+
+/* ── SCROLL INDICATOR ───────────────────────────────── */
+.scroll-indicator{
+  position:absolute;bottom:32px;left:50%;
+  transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  animation:float 2s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+.scroll-line{width:1px;height:48px;background:linear-gradient(to bottom,rgba(0,245,160,0.4),transparent)}
+.scroll-dot{width:4px;height:4px;background:var(--green);border-radius:50%}
+
+/* ── MAIN DASHBOARD ─────────────────────────────────── */
+.dashboard{
+  padding:60px 32px;max-width:1320px;margin:0 auto;
+}
+
+/* ── MARKET REGIME BAR ──────────────────────────────── */
+.regime-bar{
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:16px;padding:16px 24px;
+  margin-bottom:32px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;
+  backdrop-filter:blur(20px);
+  position:relative;overflow:hidden;
+}
+.regime-bar::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,245,160,0.3),transparent);
+}
+.regime-items{display:flex;align-items:center;gap:32px;flex-wrap:wrap}
+.regime-item{display:flex;align-items:center;gap:8px}
+.regime-dot{width:8px;height:8px;border-radius:50%}
+.regime-dot.bull{background:var(--green);box-shadow:0 0 8px var(--green)}
+.regime-dot.bear{background:var(--red);box-shadow:0 0 8px var(--red)}
+.regime-dot.neutral{background:var(--amber)}
+.regime-label{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px}
+.regime-val{font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.regime-val.bull{color:var(--green)}
+.regime-val.bear{color:var(--red)}
+.regime-val.neutral{color:var(--amber)}
+.vix-chip{
+  background:rgba(255,184,48,0.08);border:1px solid rgba(255,184,48,0.2);
+  border-radius:8px;padding:4px 12px;
+  font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--amber);
+}
+.live-time{
+  font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);
+  display:flex;align-items:center;gap:6px;
+}
+.live-badge-sm{
+  width:6px;height:6px;background:var(--green);
+  border-radius:50%;animation:pulse 1.5s infinite;
+}
+
+/* ── MARKET TICKER ──────────────────────────────────── */
+.ticker-wrap{
+  overflow:hidden;margin-bottom:32px;
+  border-radius:10px;
+  background:var(--glass);border:1px solid var(--border);
+}
+.ticker-inner{
+  display:flex;gap:0;
+  animation:ticker 30s linear infinite;
+  white-space:nowrap;
+}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ticker-item{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 24px;border-right:1px solid var(--border);
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+}
+.ticker-sym{color:var(--dim);font-weight:500}
+.ticker-price{color:var(--text);font-weight:600}
+.ticker-chg{font-size:11px}
+.up{color:var(--green)}
+.dn{color:var(--red)}
+
+/* ── SECTION TITLE ──────────────────────────────────── */
+.section-title{
+  font-size:11px;color:var(--muted);
+  letter-spacing:2px;text-transform:uppercase;
+  font-family:'JetBrains Mono',monospace;
+  margin-bottom:16px;
+  display:flex;align-items:center;gap:10px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── GRID ───────────────────────────────────────────── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:24px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}.grid-4{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.grid-4{grid-template-columns:1fr}}
+
+/* ── GLASS CARD ─────────────────────────────────────── */
+.card{
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:16px;padding:24px;
+  backdrop-filter:blur(20px);
+  position:relative;overflow:hidden;
+  transition:border-color 0.3s,transform 0.3s,box-shadow 0.3s;
+}
+.card:hover{
+  border-color:var(--border2);
+  transform:translateY(-2px);
+  box-shadow:0 24px 80px rgba(0,0,0,0.4);
+}
+.card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(255,255,255,0.015),transparent);
+  pointer-events:none;
+}
+
+/* ── SIGNAL CARD ────────────────────────────────────── */
+.signal-card{
+  border-radius:20px;padding:28px;
+  position:relative;overflow:hidden;
+  backdrop-filter:blur(40px);
+  transition:transform 0.3s,box-shadow 0.3s;
+}
+.signal-card:hover{transform:translateY(-4px)}
+.signal-card.buy{
+  background:linear-gradient(135deg,rgba(0,245,160,0.08),rgba(0,212,255,0.04));
+  border:1px solid rgba(0,245,160,0.2);
+}
+.signal-card.sell{
+  background:linear-gradient(135deg,rgba(255,59,107,0.08),rgba(255,100,50,0.04));
+  border:1px solid rgba(255,59,107,0.2);
+}
+.signal-card.hold{
+  background:linear-gradient(135deg,rgba(255,184,48,0.06),rgba(255,220,100,0.03));
+  border:1px solid rgba(255,184,48,0.2);
+}
+.signal-glow{
+  position:absolute;top:-60px;right:-60px;
+  width:180px;height:180px;border-radius:50%;
+  filter:blur(60px);opacity:0.2;pointer-events:none;
+}
+.buy .signal-glow{background:var(--green)}
+.sell .signal-glow{background:var(--red)}
+.hold .signal-glow{background:var(--amber)}
+
+.signal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+.signal-badge{
+  font-size:11px;font-family:'JetBrains Mono',monospace;
+  letter-spacing:2px;text-transform:uppercase;
+  padding:4px 12px;border-radius:6px;
+  font-weight:600;
+}
+.buy .signal-badge{background:rgba(0,245,160,0.12);color:var(--green)}
+.sell .signal-badge{background:rgba(255,59,107,0.12);color:var(--red)}
+.hold .signal-badge{background:rgba(255,184,48,0.12);color:var(--amber)}
+
+.signal-sym{font-size:22px;font-weight:800;letter-spacing:-0.5px;margin-bottom:2px}
+.signal-tf{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+
+.signal-price{text-align:right}
+.signal-price-val{font-size:20px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.signal-price-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+/* confidence gauge */
+.conf-section{margin-bottom:20px}
+.conf-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.conf-lbl{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.conf-pct{font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.buy .conf-pct{color:var(--green)}
+.sell .conf-pct{color:var(--red)}
+.hold .conf-pct{color:var(--amber)}
+.conf-track{
+  height:6px;background:rgba(255,255,255,0.05);
+  border-radius:3px;overflow:hidden;
+}
+.conf-fill{
+  height:100%;border-radius:3px;
+  transition:width 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+.buy .conf-fill{background:linear-gradient(90deg,var(--green2),var(--green))}
+.sell .conf-fill{background:linear-gradient(90deg,var(--red2),var(--red))}
+.hold .conf-fill{background:linear-gradient(90deg,#cc8800,var(--amber))}
+
+/* targets */
+.targets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.target-box{
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--border);
+  border-radius:10px;padding:12px;text-align:center;
+}
+.target-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:'JetBrains Mono',monospace;margin-bottom:4px}
+.target-val{font-size:14px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.target-entry{color:var(--blue)}
+.target-tp{color:var(--green)}
+.target-sl{color:var(--red)}
+
+/* ── STAT CARD ──────────────────────────────────────── */
+.stat-card{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:14px;padding:20px;
+  backdrop-filter:blur(20px);
+  position:relative;overflow:hidden;
+  transition:all 0.3s;
+}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:'JetBrains Mono',monospace;margin-bottom:8px}
+.stat-val{font-size:26px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.stat-val.pos{color:var(--green)}
+.stat-val.neg{color:var(--red)}
+.stat-val.neu{color:var(--amber)}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.stat-trend{
+  position:absolute;bottom:16px;right:16px;
+  font-size:18px;opacity:0.5;
+}
+
+/* ── SCANNER TABLE ──────────────────────────────────── */
+.scanner-card{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+  backdrop-filter:blur(20px);margin-bottom:24px;
+}
+.scanner-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 24px;border-bottom:1px solid var(--border);
+}
+.scanner-title{font-size:13px;font-weight:600;letter-spacing:0.5px}
+.scanner-count{
+  font-size:11px;font-family:'JetBrains Mono',monospace;
+  color:var(--green);background:var(--green-g);
+  border:1px solid rgba(0,245,160,0.15);
+  border-radius:6px;padding:3px 10px;
+}
+table{width:100%;border-collapse:collapse}
+thead th{
+  text-align:left;padding:10px 16px;
+  font-size:10px;color:var(--muted);
+  letter-spacing:1px;text-transform:uppercase;
+  font-family:'JetBrains Mono',monospace;
+  border-bottom:1px solid var(--border);font-weight:400;
+}
+tbody tr{transition:background 0.15s}
+tbody tr:hover{background:rgba(255,255,255,0.02)}
+tbody td{
+  padding:12px 16px;font-size:13px;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+  font-family:'JetBrains Mono',monospace;
+}
+tbody tr:last-child td{border-bottom:none}
+.pill{
+  display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;
+}
+.pill.buy{background:var(--green-g);color:var(--green);border:1px solid rgba(0,245,160,0.15)}
+.pill.sell{background:var(--red-g);color:var(--red);border:1px solid rgba(255,59,107,0.15)}
+.pill.hold{background:var(--amber-g);color:var(--amber);border:1px solid rgba(255,184,48,0.15)}
+.conf-bar-sm{
+  width:60px;height:4px;background:rgba(255,255,255,0.05);
+  border-radius:2px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px;
+}
+.conf-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--green2),var(--green))}
+
+/* ── HISTORY TABLE ──────────────────────────────────── */
+.outcome-win{color:var(--green)}
+.outcome-loss{color:var(--red)}
+.outcome-pending{color:var(--muted)}
+.outcome-neutral{color:var(--amber)}
+
+/* ── ANALYTICS ──────────────────────────────────────── */
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+@media(max-width:700px){.analytics-grid{grid-template-columns:1fr}}
+
+/* mini chart */
+.mini-chart{
+  height:80px;position:relative;margin-top:12px;
+}
+.chart-svg{width:100%;height:100%}
+
+/* win rate ring */
+.ring-wrap{display:flex;align-items:center;gap:20px}
+.ring-svg{flex-shrink:0}
+.ring-stats{flex:1}
+.ring-val{font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--green)}
+.ring-lbl{font-size:11px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+.ring-breakdown{display:flex;flex-direction:column;gap:4px}
+.ring-row{display:flex;justify-content:space-between;font-size:12px;font-family:'JetBrains Mono',monospace}
+
+/* ── NIFTY / SENSEX ─────────────────────────────────── */
+.index-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.index-card{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:16px;padding:20px;
+  backdrop-filter:blur(20px);position:relative;overflow:hidden;
+}
+.index-name{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:4px}
+.index-price{font-size:28px;font-weight:800;font-family:'JetBrains Mono',monospace;letter-spacing:-1px;margin-bottom:4px}
+.index-change{font-size:13px;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.change-chip{
+  padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;
+}
+.up-chip{background:var(--green-g);color:var(--green)}
+.dn-chip{background:var(--red-g);color:var(--red)}
+
+/* ── SEARCH BAR ─────────────────────────────────────── */
+.search-wrap{
+  position:relative;margin-bottom:32px;
+}
+.search-input{
+  width:100%;background:var(--glass2);
+  border:1px solid var(--border);border-radius:14px;
+  padding:14px 20px 14px 48px;
+  color:var(--text);font-family:'Syne',sans-serif;font-size:15px;
+  outline:none;transition:border-color 0.2s,box-shadow 0.2s;
+  backdrop-filter:blur(20px);
+}
+.search-input:focus{
+  border-color:rgba(0,245,160,0.3);
+  box-shadow:0 0 0 3px rgba(0,245,160,0.06);
+}
+.search-input::placeholder{color:var(--muted)}
+.search-icon{
+  position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  color:var(--muted);font-size:18px;pointer-events:none;
+}
+
+/* ── NAV ─────────────────────────────────────────────── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:16px 32px;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(3,5,10,0.7);backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{
+  font-size:16px;font-weight:800;letter-spacing:-0.5px;
+  display:flex;align-items:center;gap:8px;
+}
+.nav-logo-dot{
+  width:8px;height:8px;background:var(--green);
+  border-radius:50%;animation:pulse 1.5s infinite;
+}
+.nav-links{display:flex;gap:8px}
+.nav-link{
+  font-size:12px;color:var(--muted);padding:6px 14px;
+  border-radius:8px;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;letter-spacing:0.5px;
+  transition:all 0.2s;border:1px solid transparent;
+}
+.nav-link:hover,.nav-link.active{
+  color:var(--text);background:var(--glass2);
+  border-color:var(--border);
+}
+
+/* ── FOOTER ─────────────────────────────────────────── */
+footer{
+  text-align:center;padding:32px;
+  border-top:1px solid var(--border);
+  font-size:11px;color:var(--muted);
+  font-family:'JetBrains Mono',monospace;letter-spacing:1px;
+}
+
+/* ── ANIMATIONS ─────────────────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp 0.6s ease both}
+.fade-up-1{animation-delay:0.1s}
+.fade-up-2{animation-delay:0.2s}
+.fade-up-3{animation-delay:0.3s}
+.fade-up-4{animation-delay:0.4s}
+
+/* tabs */
+.tabs{display:flex;gap:4px;margin-bottom:24px;
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:12px;padding:4px;width:fit-content;
+}
+.tab{
+  font-size:12px;padding:7px 16px;border-radius:9px;
+  cursor:pointer;font-family:'JetBrains Mono',monospace;
+  color:var(--muted);transition:all 0.2s;
+  letter-spacing:0.5px;
+}
+.tab.active{
+  background:var(--glass2);color:var(--text);
+  border:1px solid var(--border);
+}
+
+/* notification dot */
+.notif{
+  display:inline-block;width:6px;height:6px;
+  background:var(--green);border-radius:50%;
+  margin-left:4px;vertical-align:middle;
+  animation:pulse 1.5s infinite;
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <span class="nav-logo-dot"></span>
+    SignalAI
+  </div>
+  <div class="nav-links">
+    <div class="nav-link active">Dashboard</div>
+    <div class="nav-link">Scanner</div>
+    <div class="nav-link">History</div>
+    <div class="nav-link">Analytics</div>
+  </div>
+</nav>
+
+<!-- HERO with antigravity bubbles -->
+<section class="hero" id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-badge fade-up"><span class="pulse"></span>Live Market Intelligence</div>
+    <h1 class="hero-title fade-up fade-up-1">Signal<span>AI</span></h1>
+    <p class="hero-sub fade-up fade-up-2">NSE · BSE · XGBoost + LSTM Ensemble · Real-time</p>
+    <div class="hero-stats fade-up fade-up-3">
+      <div class="hero-stat">
+        <div class="hero-stat-val" id="hero-wr">--</div>
+        <div class="hero-stat-lbl">Win Rate</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val" id="hero-sigs">--</div>
+        <div class="hero-stat-lbl">Signals Today</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val" id="hero-exp">--</div>
+        <div class="hero-stat-lbl">Expectancy</div>
+      </div>
+    </div>
+    <a href="#dashboard" class="hero-cta fade-up fade-up-4">
+      Enter Dashboard →
+    </a>
+  </div>
+  <div class="scroll-indicator">
+    <div class="scroll-dot"></div>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+
+  <!-- ticker -->
+  <div class="ticker-wrap">
+    <div class="ticker-inner" id="ticker"></div>
+  </div>
+
+  <!-- NIFTY / SENSEX index cards -->
+  <div class="section-title">Market Indices</div>
+  <div class="index-cards" id="index-cards">
+    <div class="index-card">
+      <div class="index-name">NIFTY 50</div>
+      <div class="index-price up" id="nifty-price">24,312.50</div>
+      <div class="index-change">
+        <span class="change-chip up-chip" id="nifty-chg">▲ +0.82%</span>
+        <span style="font-size:11px;color:var(--muted)" id="nifty-pts">+197.35</span>
+      </div>
+      <svg class="chart-svg" viewBox="0 0 200 50" id="nifty-chart">
+        <polyline fill="none" stroke="rgba(0,245,160,0.4)" stroke-width="1.5"
+          points="0,40 20,35 40,37 60,28 80,32 100,20 120,18 140,22 160,15 180,10 200,8"/>
+        <polyline fill="rgba(0,245,160,0.05)" stroke="none"
+          points="0,40 20,35 40,37 60,28 80,32 100,20 120,18 140,22 160,15 180,10 200,8 200,50 0,50"/>
+      </svg>
+    </div>
+    <div class="index-card">
+      <div class="index-name">SENSEX</div>
+      <div class="index-price up" id="sensex-price">80,148.20</div>
+      <div class="index-change">
+        <span class="change-chip up-chip" id="sensex-chg">▲ +0.71%</span>
+        <span style="font-size:11px;color:var(--muted)" id="sensex-pts">+561.40</span>
+      </div>
+      <svg class="chart-svg" viewBox="0 0 200 50" id="sensex-chart">
+        <polyline fill="none" stroke="rgba(0,245,160,0.4)" stroke-width="1.5"
+          points="0,42 20,38 40,35 60,30 80,33 100,25 120,20 140,24 160,18 180,12 200,9"/>
+        <polyline fill="rgba(0,245,160,0.05)" stroke="none"
+          points="0,42 20,38 40,35 60,30 80,33 100,25 120,20 140,24 160,18 180,12 200,9 200,50 0,50"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- regime bar -->
+  <div class="regime-bar">
+    <div class="regime-items">
+      <div class="regime-item">
+        <div class="regime-dot bull"></div>
+        <span class="regime-label">NIFTY</span>
+        <span class="regime-val bull" id="nifty-regime">BULLISH</span>
+      </div>
+      <div class="regime-item">
+        <div class="regime-dot neutral" id="bnf-dot"></div>
+        <span class="regime-label">BANKNIFTY</span>
+        <span class="regime-val neutral" id="bnf-regime">NEUTRAL</span>
+      </div>
+      <div class="regime-item">
+        <span class="regime-label">INDIA VIX</span>
+        <span class="vix-chip" id="vix-val">14.82</span>
+      </div>
+      <div class="regime-item">
+        <span class="regime-label">REGIME</span>
+        <span class="regime-val bull" id="overall-regime">BULLISH</span>
+      </div>
+    </div>
+    <div class="live-time">
+      <span class="live-badge-sm"></span>
+      <span id="live-clock">--:--:--</span>
+    </div>
+  </div>
+
+  <!-- search -->
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input class="search-input" type="text" placeholder="Search stock symbol (e.g. RELIANCE, INFY, ZOMATO)..." id="stock-search">
+  </div>
+
+  <!-- signal cards -->
+  <div class="section-title">Live Signals</div>
+  <div class="grid-2" id="signal-grid">
+
+    <div class="signal-card buy fade-up">
+      <div class="signal-glow"></div>
+      <div style="position:relative;z-index:1">
+        <div class="signal-header">
+          <div>
+            <div class="signal-badge">BUY</div>
+            <div class="signal-sym" style="margin-top:10px">RELIANCE</div>
+            <div class="signal-tf">15m · Intraday · Large Cap</div>
+          </div>
+          <div class="signal-price">
+            <div class="signal-price-lbl">Entry Price</div>
+            <div class="signal-price-val">₹2,847.50</div>
+          </div>
+        </div>
+        <div class="conf-section">
+          <div class="conf-header">
+            <span class="conf-lbl">Confidence</span>
+            <span class="conf-pct">78%</span>
+          </div>
+          <div class="conf-track"><div class="conf-fill" style="width:78%"></div></div>
+        </div>
+        <div class="targets">
+          <div class="target-box"><div class="target-lbl">Entry</div><div class="target-val target-entry">₹2,847</div></div>
+          <div class="target-box"><div class="target-lbl">Target</div><div class="target-val target-tp">₹2,904</div></div>
+          <div class="target-box"><div class="target-lbl">Stop Loss</div><div class="target-val target-sl">₹2,813</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="signal-card sell fade-up fade-up-1">
+      <div class="signal-glow"></div>
+      <div style="position:relative;z-index:1">
+        <div class="signal-header">
+          <div>
+            <div class="signal-badge">SELL</div>
+            <div class="signal-sym" style="margin-top:10px">BAJFINANCE</div>
+            <div class="signal-tf">15m · Intraday · Financial</div>
+          </div>
+          <div class="signal-price">
+            <div class="signal-price-lbl">Entry Price</div>
+            <div class="signal-price-val">₹7,124.30</div>
+          </div>
+        </div>
+        <div class="conf-section">
+          <div class="conf-header">
+            <span class="conf-lbl">Confidence</span>
+            <span class="conf-pct">71%</span>
+          </div>
+          <div class="conf-track"><div class="conf-fill" style="width:71%"></div></div>
+        </div>
+        <div class="targets">
+          <div class="target-box"><div class="target-lbl">Entry</div><div class="target-val target-entry">₹7,124</div></div>
+          <div class="target-box"><div class="target-lbl">Target</div><div class="target-val target-tp">₹7,010</div></div>
+          <div class="target-box"><div class="target-lbl">Stop Loss</div><div class="target-val target-sl">₹7,210</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- performance stats -->
+  <div class="section-title">Performance</div>
+  <div class="grid-4" id="stats-grid">
+    <div class="stat-card fade-up">
+      <div class="stat-lbl">Win Rate</div>
+      <div class="stat-val pos" id="stat-wr">--</div>
+      <div class="stat-sub" id="stat-wr-sub">No trades yet</div>
+      <div class="stat-trend">🎯</div>
+    </div>
+    <div class="stat-card fade-up fade-up-1">
+      <div class="stat-lbl">Total Signals</div>
+      <div class="stat-val" id="stat-total" style="color:var(--blue)">0</div>
+      <div class="stat-sub" id="stat-total-sub">0 fired today</div>
+      <div class="stat-trend">📡</div>
+    </div>
+    <div class="stat-card fade-up fade-up-2">
+      <div class="stat-lbl">Expectancy</div>
+      <div class="stat-val neu" id="stat-exp">--</div>
+      <div class="stat-sub">per ₹100 risked</div>
+      <div class="stat-trend">📊</div>
+    </div>
+    <div class="stat-card fade-up fade-up-3">
+      <div class="stat-lbl">Model Health</div>
+      <div class="stat-val" id="stat-health" style="color:var(--muted)">--</div>
+      <div class="stat-sub" id="stat-health-sub">Gathering data</div>
+      <div class="stat-trend">🧠</div>
+    </div>
+  </div>
+
+  <!-- scanner -->
+  <div class="section-title">High Return Scanner <span class="notif"></span></div>
+  <div class="scanner-card fade-up">
+    <div class="scanner-header">
+      <div class="scanner-title">Top Opportunities — Live Scan</div>
+      <div class="scanner-count" id="scanner-count">8 signals</div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Symbol</th><th>Signal</th><th>Confidence</th>
+          <th>Entry</th><th>Target</th><th>SL</th>
+          <th>RSI</th><th>Regime</th>
+        </tr>
+      </thead>
+      <tbody id="scanner-tbody">
+        <tr><td>RELIANCE</td><td><span class="pill buy">BUY</span></td>
+          <td><span class="conf-bar-sm"><span class="conf-bar-fill" style="width:78%"></span></span>78%</td>
+          <td>₹2,847</td><td>₹2,904</td><td>₹2,813</td><td style="color:var(--green)">52</td><td style="color:var(--green)">BULL</td></tr>
+        <tr><td>TCS</td><td><span class="pill buy">BUY</span></td>
+          <td><span class="conf-bar-sm"><span class="conf-bar-fill" style="width:74%"></span></span>74%</td>
+          <td>₹3,542</td><td>₹3,613</td><td>₹3,499</td><td style="color:var(--green)">48</td><td style="color:var(--green)">BULL</td></tr>
+        <tr><td>BAJFINANCE</td><td><span class="pill sell">SELL</span></td>
+          <td><span class="conf-bar-sm"><span class="conf-bar-fill" style="width:71%;background:linear-gradient(90deg,var(--red2),var(--red))"></span></span>71%</td>
+          <td>₹7,124</td><td>₹7,010</td><td>₹7,210</td><td style="color:var(--red)">74</td><td style="color:var(--muted)">NEUTRAL</td></tr>
+        <tr><td>HDFCBANK</td><td><span class="pill buy">BUY</span></td>
+          <td><span class="conf-bar-sm"><span class="conf-bar-fill" style="width:68%"></span></span>68%</td>
+          <td>₹1,765</td><td>₹1,800</td><td>₹1,744</td><td style="color:var(--green)">44</td><td style="color:var(--green)">BULL</td></tr>
+        <tr><td>ZOMATO</td><td><span class="pill hold">HOLD</span></td>
+          <td><span class="conf-bar-sm"><span class="conf-bar-fill" style="width:55%;background:linear-gradient(90deg,#cc8800,var(--amber))"></span></span>55%</td>
+          <td>₹218</td><td>--</td><td>--</td><td style="color:var(--amber)">61</td><td style="color:var(--muted)">NEUTRAL</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- prediction history -->
+  <div class="section-title">Prediction Memory</div>
+  <div class="scanner-card fade-up">
+    <div class="scanner-header">
+      <div class="scanner-title">Recent Predictions & Outcomes</div>
+      <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">Auto-updated every 30min</div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Time</th><th>Stock</th><th>Signal</th><th>Conf</th><th>Entry</th><th>Outcome</th><th>P&L</th></tr>
+      </thead>
+      <tbody id="history-tbody">
+        <tr><td style="color:var(--muted)">10:32 AM</td><td>RELIANCE</td><td><span class="pill buy">BUY</span></td><td>78%</td><td>₹2,820</td><td class="outcome-win">TARGET HIT ✓</td><td class="outcome-win">+2.01%</td></tr>
+        <tr><td style="color:var(--muted)">10:15 AM</td><td>INFY</td><td><span class="pill sell">SELL</span></td><td>66%</td><td>₹1,548</td><td class="outcome-loss">SL HIT ✗</td><td class="outcome-loss">-0.85%</td></tr>
+        <tr><td style="color:var(--muted)">09:55 AM</td><td>TCS</td><td><span class="pill buy">BUY</span></td><td>72%</td><td>₹3,510</td><td class="outcome-win">TARGET HIT ✓</td><td class="outcome-win">+1.58%</td></tr>
+        <tr><td style="color:var(--muted)">09:40 AM</td><td>WIPRO</td><td><span class="pill hold">HOLD</span></td><td>54%</td><td>₹461</td><td class="outcome-pending">PENDING…</td><td class="outcome-pending">--</td></tr>
+        <tr><td style="color:var(--muted)">09:32 AM</td><td>HDFCBANK</td><td><span class="pill buy">BUY</span></td><td>69%</td><td>₹1,744</td><td class="outcome-neutral">NEUTRAL</td><td class="outcome-neutral">+0.12%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- analytics -->
+  <div class="section-title">Analytics</div>
+  <div class="analytics-grid">
+    <div class="card">
+      <div style="font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:16px">Win Rate Breakdown</div>
+      <div class="ring-wrap">
+        <svg class="ring-svg" width="90" height="90" viewBox="0 0 90 90">
+          <circle cx="45" cy="45" r="35" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
+          <circle cx="45" cy="45" r="35" fill="none" stroke="url(#grad)" stroke-width="8"
+            stroke-dasharray="157" stroke-dashoffset="47" stroke-linecap="round"
+            transform="rotate(-90 45 45)"/>
+          <defs>
+            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:var(--green2)"/>
+              <stop offset="100%" style="stop-color:var(--green)"/>
+            </linearGradient>
+          </defs>
+          <text x="45" y="49" text-anchor="middle" fill="var(--green)"
+            font-size="13" font-family="'JetBrains Mono'" font-weight="600">70%</text>
+        </svg>
+        <div class="ring-stats">
+          <div class="ring-val">70%</div>
+          <div class="ring-lbl">Overall Win Rate</div>
+          <div class="ring-breakdown">
+            <div class="ring-row"><span style="color:var(--green)">WIN</span><span>14 trades</span></div>
+            <div class="ring-row"><span style="color:var(--red)">LOSS</span><span>6 trades</span></div>
+            <div class="ring-row"><span style="color:var(--amber)">NEUTRAL</span><span>2 trades</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:8px">Confidence vs Accuracy</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:16px">When AI says X%, does it win X% of the time?</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);width:50px">60–69%</span>
+          <div style="flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:3px">
+            <div style="width:58%;height:100%;background:var(--amber);border-radius:3px"></div>
+          </div>
+          <span style="font-size:11px;color:var(--amber);font-family:'JetBrains Mono',monospace;width:35px">58%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);width:50px">70–79%</span>
+          <div style="flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:3px">
+            <div style="width:72%;height:100%;background:linear-gradient(90deg,var(--green2),var(--green));border-radius:3px"></div>
+          </div>
+          <span style="font-size:11px;color:var(--green);font-family:'JetBrains Mono',monospace;width:35px">72%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);width:50px">80–89%</span>
+          <div style="flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:3px">
+            <div style="width:81%;height:100%;background:linear-gradient(90deg,var(--green2),var(--cyan));border-radius:3px"></div>
+          </div>
+          <span style="font-size:11px;color:var(--cyan);font-family:'JetBrains Mono',monospace;width:35px">81%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);width:50px">90%+</span>
+          <div style="flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:3px">
+            <div style="width:89%;height:100%;background:linear-gradient(90deg,var(--cyan),#fff);border-radius:3px"></div>
+          </div>
+          <span style="font-size:11px;color:#fff;font-family:'JetBrains Mono',monospace;width:35px">89%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>SignalAI · For educational purposes only · Not financial advice · Trade responsibly</footer>
+
+<script>
+// ── CURSOR ────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX; my=e.clientY;
+  cursor.style.left=mx+'px'; cursor.style.top=my+'px';
+});
+
+function animRing(){
+  rx+=(mx-rx)*0.12; ry+=(my-ry)*0.12;
+  ring.style.left=rx+'px'; ring.style.top=ry+'px';
+  requestAnimationFrame(animRing);
+}
+animRing();
+
+document.querySelectorAll('a,button,.nav-link,.tab,.hero-cta').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{
+    cursor.style.width='6px'; cursor.style.height='6px';
+    ring.style.width='52px'; ring.style.height='52px';
+    ring.style.borderColor='rgba(0,245,160,0.7)';
+  });
+  el.addEventListener('mouseleave',()=>{
+    cursor.style.width='12px'; cursor.style.height='12px';
+    ring.style.width='36px'; ring.style.height='36px';
+    ring.style.borderColor='rgba(0,245,160,0.4)';
+  });
+});
+
+// ── ANTIGRAVITY BUBBLE CANVAS ─────────────────────────
+const canvas=document.getElementById('hero-canvas');
+const ctx=canvas.getContext('2d');
+let bubbles=[];
+let cmx=0,cmy=0;
+
+function resize(){
+  canvas.width=canvas.parentElement.offsetWidth;
+  canvas.height=canvas.parentElement.offsetHeight;
+}
+resize();
+window.addEventListener('resize',resize);
+
+document.getElementById('hero').addEventListener('mousemove',e=>{
+  const rect=canvas.getBoundingClientRect();
+  cmx=e.clientX-rect.left; cmy=e.clientY-rect.top;
+});
+
+class Bubble{
+  constructor(){this.reset(true)}
+  reset(init=false){
+    this.x=Math.random()*canvas.width;
+    this.y=init?Math.random()*canvas.height:canvas.height+20;
+    this.baseR=2+Math.random()*5;
+    this.r=this.baseR;
+    this.vx=(Math.random()-0.5)*0.4;
+    this.vy=-(0.3+Math.random()*0.7);
+    this.alpha=0.1+Math.random()*0.25;
+    this.hue=140+Math.random()*80; // green to cyan
+    this.ox=this.x; this.oy=this.y;
+  }
+  draw(){
+    // antigravity: flee cursor
+    const dx=this.x-cmx, dy=this.y-cmy;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    const force=180;
+    if(dist<force && dist>0){
+      const strength=(force-dist)/force;
+      this.vx+=dx/dist*strength*0.8;
+      this.vy+=dy/dist*strength*0.8;
+    }
+    // dampen
+    this.vx*=0.97; this.vy*=0.97;
+    // base drift upward
+    this.vy-=0.008;
+    this.x+=this.vx; this.y+=this.vy;
+
+    // draw
+    ctx.beginPath();
+    const grd=ctx.createRadialGradient(this.x-this.r*0.3,this.y-this.r*0.3,0,this.x,this.y,this.r);
+    grd.addColorStop(0,`hsla(${this.hue},100%,80%,${this.alpha*1.5})`);
+    grd.addColorStop(0.5,`hsla(${this.hue},90%,60%,${this.alpha})`);
+    grd.addColorStop(1,`hsla(${this.hue},80%,40%,0)`);
+    ctx.fillStyle=grd;
+    ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+    ctx.fill();
+
+    // shimmer ring
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+    ctx.strokeStyle=`hsla(${this.hue},100%,70%,${this.alpha*0.4})`;
+    ctx.lineWidth=0.5;
+    ctx.stroke();
+
+    if(this.y<-20||this.x<-50||this.x>canvas.width+50) this.reset();
+  }
+}
+
+for(let i=0;i<80;i++) bubbles.push(new Bubble());
+
+function animBubbles(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  bubbles.forEach(b=>b.draw());
+  requestAnimationFrame(animBubbles);
+}
+animBubbles();
+
+// ── CLOCK ─────────────────────────────────────────────
+function updateClock(){
+  const now=new Date();
+  document.getElementById('live-clock').textContent=
+    now.toLocaleTimeString('en-IN',{hour12:false});
+}
+setInterval(updateClock,1000); updateClock();
+
+// ── TICKER ────────────────────────────────────────────
+const tickerData=[
+  {sym:'NIFTY 50',price:'24,312.50',chg:'+0.82%',up:true},
+  {sym:'SENSEX',price:'80,148.20',chg:'+0.71%',up:true},
+  {sym:'RELIANCE',price:'2,847.50',chg:'+1.24%',up:true},
+  {sym:'TCS',price:'3,542.30',chg:'+0.56%',up:true},
+  {sym:'HDFCBANK',price:'1,765.80',chg:'-0.31%',up:false},
+  {sym:'INFY',price:'1,548.20',chg:'+0.88%',up:true},
+  {sym:'BAJFINANCE',price:'7,124.30',chg:'-1.12%',up:false},
+  {sym:'WIPRO',price:'461.50',chg:'+0.42%',up:true},
+  {sym:'LTIM',price:'5,234.60',chg:'+1.55%',up:true},
+  {sym:'TATAMOTORS',price:'782.40',chg:'-0.68%',up:false},
+];
+
+function buildTicker(){
+  const t=document.getElementById('ticker');
+  const items=[...tickerData,...tickerData]; // doubled for seamless loop
+  t.innerHTML=items.map(d=>`
+    <div class="ticker-item">
+      <span class="ticker-sym">${d.sym}</span>
+      <span class="ticker-price">₹${d.price}</span>
+      <span class="ticker-chg ${d.up?'up':'dn'}">${d.up?'▲':'▼'} ${d.chg}</span>
+    </div>
+  `).join('');
+}
+buildTicker();
+
+// ── HERO STATS (demo values — replace with API calls) ──
+document.getElementById('hero-wr').textContent='70%';
+document.getElementById('hero-sigs').textContent='12';
+document.getElementById('hero-exp').textContent='+1.4%';
+
+// ── SMOOTH SCROLL ──────────────────────────────────────
+document.querySelector('.hero-cta').addEventListener('click',e=>{
+  e.preventDefault();
+  document.getElementById('dashboard').scrollIntoView({behavior:'smooth'});
+});
+
+// ── NAV TABS ──────────────────────────────────────────
+document.querySelectorAll('.nav-link').forEach(link=>{
+  link.addEventListener('click',function(){
+    document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// ── SEARCH INPUT GLOW ─────────────────────────────────
+document.getElementById('stock-search').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    const val=e.target.value.toUpperCase().trim();
+    if(val) console.log('Search triggered for:',val);
+    // Hook your engine/predictor.py call here via FastAPI
+  }
+});
+</script>
+</body>
+</html>

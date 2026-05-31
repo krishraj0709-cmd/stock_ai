@@ -1,0 +1,1 @@
+{"feature_cols": ["rsi", "macd", "macd_hist", "bb_pct", "bb_width", "atr", "vol_ratio", "ema_9", "ema_20", "ema_50", "price_change", "log_return", "candle_body", "candle_range", "upper_shadow", "lower_shadow", "roc_5", "roc_10", "roc_20"], "horizon": 20}
