@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: signalai-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+
+  - type: web
+    name: signalai-dashboard
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run dashboard/app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: API_URL
+        sync: false
