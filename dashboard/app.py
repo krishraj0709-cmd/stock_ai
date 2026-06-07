@@ -11,8 +11,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from data.ingestion.yfinance_connector import fetch_historical
 from data.feature_store.technical import add_technical_indicators
-
-API_URL = "http://localhost:8000"
+import os
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 # ── PAGE CONFIG ────────────────────────────────────────────────────────────────
 st.set_page_config(
