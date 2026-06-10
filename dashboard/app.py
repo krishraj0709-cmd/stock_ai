@@ -331,6 +331,15 @@ def signal_pill(signal):
 def regime_color(r):
     return {"BULLISH":"#00f5a0","BEARISH":"#ff3b6b","NEUTRAL":"#ffb830"}.get(r,"#5a6478")
 
+# Wake up API if sleeping
+def wake_api():
+    try:
+        requests.get(f"{API_URL}/health", timeout=60)
+    except Exception:
+        pass
+
+wake_api()
+
 def fetch_regime():
     try:
         r = requests.get(f"{API_URL}/market/regime", timeout=8)
